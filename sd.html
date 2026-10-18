@@ -191,9 +191,15 @@ button:disabled{opacity:.6;cursor:default}
   var meta = null;
 
   function render(html){
-    document.open();
-    document.write(html);
-    document.close();
+    // Навигация на blob-URL заменяет документ целиком — без наложения страницы пароля.
+    try {
+      var url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+      location.replace(url);
+    } catch (e) {
+      document.open();
+      document.write(html);
+      document.close();
+    }
   }
 
   try { var c = sessionStorage.getItem(CACHE); if (c) { render(c); return; } } catch(e) {}
