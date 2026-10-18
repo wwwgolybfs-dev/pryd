@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SD Диски — заказ плейлиста</title>
+<style>
+  :root{
+    --bg:#f4f5fa; --card:#ffffff; --text:#16181f; --muted:#6b7280;
+    --line:#e7e9f2; --accent:#4f46e5; --accent-2:#0ea5e9; --good:#16a34a;
+    --warn:#d97706; --bad:#dc2626; --radius:14px; --shadow:0 1px 2px rgba(20,24,40,.05),0 8px 24px rgba(20,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+  a{color:var(--accent)}
+  button{font:inherit;cursor:pointer}
+  input,textarea,select{font:inherit;color:inherit;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  header{position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+  .bar{max-width:1060px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:12px 18px}
+  .brand{font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .brand .dot{color:var(--accent)}
+  .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .nav button{background:transparent;border:1px solid transparent;border-radius:10px;padding:7px 12px;color:var(--text)}
+  .nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .chip .avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;text-transform:uppercase}
+  main{max-width:1060px;margin:0 auto;padding:22px 18px 110px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+  h1,h2,h3{margin:0 0 12px}
+  h2{font-size:18px}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .grow{flex:1;min-width:220px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:600}
+  .btn.ghost{background:#eef0fb;color:var(--accent)}
+  .btn.danger{background:#fdeaea;color:var(--bad)}
+  .btn.small{padding:6px 10px;font-size:13px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tabs button{flex:1;background:#f1f3fa;border:none;border-radius:10px;padding:9px;font-weight:600;color:var(--muted)}
+  .tabs button.on{background:var(--accent);color:#fff}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .track{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .track .info{flex:1;min-width:0}
+  .track .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track .a{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track .dur{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+  .play{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;flex:0 0 auto}
+  .play.playing{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .empty{padding:28px;text-align:center;color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .order{border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:.12s}
+  .order:hover{border-color:var(--accent)}
+  .order .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .order .num{font-weight:700}
+  .badge{font-size:12px;padding:2px 9px;border-radius:99px;font-weight:600;white-space:nowrap}
+  .b-new{background:#e8ecff;color:var(--accent)}
+  .b-recorded{background:#e7f6ec;color:var(--good)}
+  .b-shipped{background:#e0f3ff;color:var(--accent-2)}
+  .b-canceled{background:#fdeaea;color:var(--bad)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  .cart-line{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .cart-line .info{flex:1}
+  .cart-total{display:flex;justify-content:space-between;padding:12px 0;font-weight:700}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16181f;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:60}
+  .toast.show{opacity:1}
+  #player-bar{position:fixed;left:0;right:0;bottom:0;background:#16181f;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:14px;z-index:50;transform:translateY(100%);transition:.2s}
+  #player-bar.show{transform:translateY(0)}
+  #player-bar .pt{flex:1;min-width:0}
+  #player-bar .pt .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #player-bar .pt .a{color:#9aa1b0;font-size:13px}
+  #player-bar .pbtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:16px;flex:0 0 auto}
+  .seek{flex:1;height:4px;background:#333;border-radius:2px;overflow:hidden;cursor:pointer}
+  .seek .fill{height:100%;background:var(--accent);width:0}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">SD<span class="dot">·</span>Диски</div>
+    <div class="nav">
+      <button id="nav-user" class="hidden">Заказ</button>
+      <button id="nav-admin" class="hidden">Админка</button>
+      <span class="chip hidden" id="user-chip"><span class="avatar" id="avatar">?</span><span id="chip-name"></span></span>
+      <button id="nav-logout" class="hidden">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- АВТОРИЗАЦИЯ -->
+  <section id="view-auth">
+    <div class="grid2" style="max-width:760px;margin:0 auto">
+      <div class="card">
+        <h2>Вход</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input id="login-user" placeholder="Логин" autocomplete="username">
+          <input id="login-pass" type="password" placeholder="Пароль" autocomplete="current-password">
+          <button class="btn" data-action="login">Войти</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Регистрация</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input id="reg-user" placeholder="Логин" autocomplete="username">
+          <input id="reg-name" placeholder="Как вас зовут">
+          <input id="reg-pass" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="new-password">
+          <button class="btn ghost" data-action="register">Создать аккаунт</button>
+        </div>
+        <div class="note">Логин — 3–30 символов: буквы, цифры, точка, минус, подчёркивание.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ПОЛЬЗОВАТЕЛЬ -->
+  <section id="view-user" class="hidden">
+    <div class="card">
+      <h2>Собрать плейлист</h2>
+      <div class="row">
+        <div class="grow"><input id="q" placeholder="Название песни или исполнителя"></div>
+        <button class="btn" data-action="search">Найти</button>
+      </div>
+      <div class="tabs" style="margin-top:12px">
+        <button id="tab-song" class="on" data-action="tab" data-mode="song">Песни</button>
+        <button id="tab-album" data-action="tab" data-mode="album">Альбомы</button>
+      </div>
+      <div id="search-results" class="list"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Корзина <span class="muted" id="cart-count"></span></h2>
+        <button class="btn ghost small" data-action="clear-cart">Очистить</button>
+      </div>
+      <div id="cart-list" class="list" style="margin-top:12px"></div>
+      <div class="cart-total hidden" id="cart-total"><span>Итого</span><span id="cart-total-val"></span></div>
+
+      <form id="checkout-form" class="hidden" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+        <h3>Оформление заказа</h3>
+        <input id="co-name" placeholder="Имя и фамилия">
+        <input id="co-phone" placeholder="Телефон">
+        <input id="co-address" placeholder="Адрес доставки">
+        <input id="co-comment" placeholder="Комментарий (необязательно)">
+        <button class="btn" type="submit">Отправить заказ</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Мои заказы</h2>
+      <div id="my-orders" class="list"></div>
+    </div>
+  </section>
+
+  <!-- АДМИН -->
+  <section id="view-admin" class="hidden">
+    <div class="card">
+      <h2>Заказы</h2>
+      <button class="btn ghost small" data-action="refresh-orders">Обновить</button>
+      <div style="overflow-x:auto;margin-top:10px">
+        <table>
+          <thead><tr><th>№</th><th>Дата</th><th>Клиент</th><th>Позиций</th><th>Статус</th><th>Трек-№</th></tr></thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+      <div id="order-detail" class="hidden" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <h2>Пользователи</h2>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Логин</th><th>Имя</th><th>Роль</th><th>Создан</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="player-bar">
+  <button class="pbtn" id="pb-btn">▶</button>
+  <div class="pt"><div class="t" id="pb-title"></div><div class="a" id="pb-artist"></div></div>
+  <div class="seek" id="pb-seek"><div class="fill" id="pb-fill"></div></div>
+  <span id="pb-time" style="font-size:12px;color:#9aa1b0"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const SUPABASE_URL = "https://xxauwkymufehmoprmhay.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4YXV3a3ltdWZlaG1vcHJtaGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5Njg5NDIsImV4cCI6MjEwNzU0NDk0Mn0.sanNtLTwVnNoL5azSqKvZLqZFQEfTpS9mxuECwuysEU";
+const STATUS = {new:'🆕 Новый', recorded:'✅ Записан', shipped:'📦 Отправлен', canceled:'❌ Отменён'};
+const STATUS_CLASS = {new:'b-new', recorded:'b-recorded', shipped:'b-shipped', canceled:'b-canceled'};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDur = ms => { const s = Math.round((ms||0)/1000); const m = Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); };
+const fmtDate = iso => (iso||'').slice(0,10);
+
+let state = { token:null, user:null, cart:[], mode:'song', orders:new Map(), profiles:[] };
+let player = { audio:null, key:null };
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400); }
+
+/* ---------- Supabase ---------- */
+async function authFetch(path, opts={}) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method: opts.method || 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Content-Type':'application/json', ...(opts.token ? {Authorization:`Bearer ${opts.token}`} : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(()=>null);
+  if (!res.ok) throw new Error((data && (data.msg || data.error_description || data.message)) || ('Ошибка '+res.status));
+  return data;
+}
+async function rest(method, path, opts={}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${opts.token || state.token}`,
+      'Content-Type':'application/json',
+      ...(opts.body ? {'Prefer':'return=representation'} : {}),
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 401) { logout(false); throw new Error('Сессия истекла'); }
+  if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error('Ошибка базы: '+t.slice(0,160)); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+/* ---------- Сессия ---------- */
+function saveSession(){ localStorage.setItem('sd_session', JSON.stringify({token:state.token, user:state.user})); }
+function loadSession(){ try { return JSON.parse(localStorage.getItem('sd_session')||'null'); } catch(e){ return null; } }
+function logout(redirect=true){
+  state.token=null; state.user=null; localStorage.removeItem('sd_session');
+  stopPlayback(); render(); if(redirect) setView('auth');
+}
+
+async function refreshProfile(){
+  if(!state.token) return null;
+  try {
+    const rows = await rest('GET', `sd_profiles?id=eq.${state.user.uid}&select=id,login,display_name,role`);
+    const p = rows && rows[0];
+    if (p) { state.user = { ...state.user, login:p.login, display_name:p.display_name, role:p.role }; saveSession(); }
+    return p || null;
+  } catch(e){ return null; }
+}
+
+/* ---------- Представления ---------- */
+function setView(name){
+  ['view-auth','view-user','view-admin'].forEach(v => $(v).classList.add('hidden'));
+  $('view-'+name).classList.remove('hidden');
+  $('nav-user').classList.toggle('hidden', name!=='user');
+  $('nav-admin').classList.toggle('hidden', !(state.user && state.user.role==='admin'));
+  $('nav-logout').classList.toggle('hidden', !state.user);
+  $('user-chip').classList.toggle('hidden', !state.user);
+  if (name==='user'){ $('nav-user').classList.add('on'); $('nav-admin').classList.remove('on'); }
+  if (name==='admin'){ $('nav-admin').classList.add('on'); $('nav-user').classList.remove('on'); }
+}
+function render(){
+  if (!state.user) { setView('auth'); return; }
+  $('avatar').textContent = (state.user.login||'?').charAt(0);
+  $('chip-name').textContent = state.user.display_name || state.user.login;
+  if (state.user.role==='admin') setView('admin'); else setView('user');
+  renderCart();
+  if (state.user.role==='admin') loadAdmin(); else loadUserOrders();
+}
+
+/* ---------- Авторизация ---------- */
+async function doLogin(){
+  const login = $('login-user').value.trim();
+  const password = $('login-pass').value;
+  if (!login || !password) return toast('Заполните логин и пароль');
+  try {
+    const data = await authFetch('token?grant_type=password', { body:{ email: login+'@sd.local', password } });
+    state.token = data.access_token;
+    state.user = { uid:data.user.id, login:login };
+    saveSession();
+    const p = await refreshProfile();
+    if (!p) return toast('Профиль не найден');
+    toast('Добро пожаловать!');
+    render();
+  } catch(e){ toast(e.message); }
+}
+async function doRegister(){
+  const login = $('reg-user').value.trim();
+  const name = $('reg-name').value.trim();
+  const password = $('reg-pass').value;
+  if (!/^[a-zA-Z0-9._-]{3,30}$/.test(login)) return toast('Логин: 3–30 символов (буквы, цифры, . _ -)');
+  if (password.length < 6) return toast('Пароль — минимум 6 символов');
+  try {
+    const data = await authFetch('signup', { body:{ email: login+'@sd.local', password } });
+    state.token = data.access_token;
+    state.user = { uid:data.user.id, login:login, display_name:name || login, role:'user' };
+    await rest('POST', 'sd_profiles', { body:{ id:state.user.uid, login, display_name:name || login } });
+    saveSession();
+    toast('Аккаунт создан');
+    render();
+  } catch(e){ toast(e.message); }
+}
+
+/* ---------- Поиск (iTunes) ---------- */
+async function itunes(path){
+  const res = await fetch('https://itunes.apple.com/'+path);
+  if (!res.ok) throw new Error('Поиск недоступен');
+  return (await res.json()).results || [];
+}
+async function doSearch(){
+  const q = $('q').value.trim();
+  if (!q) return toast('Введите запрос');
+  const box = $('search-results');
+  box.innerHTML = '<div class="empty">Ищем…</div>';
+  try {
+    if (state.mode==='song'){
+      const results = await itunes(`search?term=${encodeURIComponent(q)}&entity=song&media=music&limit=30`);
+      box.innerHTML = results.length ? '' : '<div class="empty">Ничего не найдено</div>';
+      for (const r of results){
+        box.insertAdjacentHTML('beforeend', `
+          <div class="track">
+            <button class="play" data-action="play" data-key="${esc(r.trackId)}" data-title="${esc(r.trackName)}" data-artist="${esc(r.artistName)}" data-preview="${esc(r.previewUrl||'')}">▶</button>
+            <div class="info"><div class="t">${esc(r.trackName)}</div><div class="a">${esc(r.artistName)} — ${esc(r.collectionName||'')}</div></div>
+            <div class="dur">${fmtDur(r.trackTimeMillis)}</div>
+            <button class="btn small" data-action="add" data-id="${esc(r.trackId)}" data-title="${esc(r.trackName)}" data-artist="${esc(r.artistName)}" data-album="${esc(r.collectionName||'')}" data-dur="${r.trackTimeMillis||0}" data-preview="${esc(r.previewUrl||'')}">＋</button>
+          </div>`);
+      }
+    } else {
+      const results = await itunes(`search?term=${encodeURIComponent(q)}&entity=album&media=music&limit=30`);
+      box.innerHTML = results.length ? '' : '<div class="empty">Ничего не найдено</div>';
+      for (const r of results){
+        box.insertAdjacentHTML('beforeend', `
+          <div class="track">
+            <div class="info"><div class="t">${esc(r.collectionName)}</div><div class="a">${esc(r.artistName)} — ${r.releaseDate?r.releaseDate.slice(0,4):''} · ${r.trackCount||'?'} трек.</div></div>
+            <button class="btn small ghost" data-action="album" data-id="${esc(r.collectionId)}">Треки</button>
+          </div>`);
+      }
+    }
+  } catch(e){ box.innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+}
+async function loadAlbum(id){
+  const box = $('search-results');
+  box.innerHTML = '<div class="empty">Загружаю треки альбома…</div>';
+  try {
+    const results = await itunes(`lookup?id=${encodeURIComponent(id)}&entity=song&limit=200`);
+    const tracks = results.filter(r => r.wrapperType==='track');
+    box.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="btn ghost small" data-action="search">← Назад</button><button class="btn small" data-action="add-album" data-artist="${esc(tracks[0]?tracks[0].artistName:'')}" data-album="${esc(tracks[0]?tracks[0].collectionName:'')}">＋ Добавить весь альбом</button></div>`;
+    if (!tracks.length){ box.insertAdjacentHTML('beforeend','<div class="empty">Треков нет</div>'); return; }
+    const data = JSON.stringify(tracks.map(r=>({id:r.trackId,title:r.trackName,artist:r.artistName,album:r.collectionName,dur:r.trackTimeMillis,preview:r.previewUrl})));
+    box.insertAdjacentHTML('beforeend', `<div class="list" id="album-list" data-album="${esc(data)}"></div>`);
+    const holder = $('album-list');
+    for (const r of tracks){
+      holder.insertAdjacentHTML('beforeend', `
+        <div class="track">
+          <button class="play" data-action="play" data-key="${esc(r.trackId)}" data-title="${esc(r.trackName)}" data-artist="${esc(r.artistName)}" data-preview="${esc(r.previewUrl||'')}">▶</button>
+          <div class="info"><div class="t">${esc(r.trackName)}</div><div class="a">${esc(r.artistName)}</div></div>
+          <div class="dur">${fmtDur(r.trackTimeMillis)}</div>
+          <button class="btn small" data-action="add" data-id="${esc(r.trackId)}" data-title="${esc(r.trackName)}" data-artist="${esc(r.artistName)}" data-album="${esc(r.collectionName||'')}" data-dur="${r.trackTimeMillis||0}" data-preview="${esc(r.previewUrl||'')}">＋</button>
+        </div>`);
+    }
+  } catch(e){ box.innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+}
+
+/* ---------- Корзина ---------- */
+function cartItem(t){ return { key:String(t.id), artist:t.artist, title:t.title, album:t.album||'', durationMs:+(t.dur||0), previewUrl:t.preview||'' }; }
+function addToCart(t){
+  if (state.cart.some(i=>i.key===String(t.id))) return toast('Уже в корзине');
+  if (state.cart.length >= 200) return toast('Корзина переполнена');
+  state.cart.push(cartItem(t));
+  localStorage.setItem('sd_cart', JSON.stringify(state.cart));
+  renderCart();
+  toast('Добавлено: '+t.artist+' — '+t.title);
+}
+function renderCart(){
+  $('cart-count').textContent = state.cart.length ? '('+state.cart.length+')' : '';
+  const list = $('cart-list');
+  const totalMs = state.cart.reduce((s,i)=>s+i.durationMs,0);
+  if (!state.cart.length){
+    list.innerHTML = '<div class="empty">Корзина пуста</div>';
+    $('cart-total').classList.add('hidden');
+    $('checkout-form').classList.add('hidden');
+    return;
+  }
+  list.innerHTML = '';
+  state.cart.forEach((i,idx)=>{
+    list.insertAdjacentHTML('beforeend', `
+      <div class="cart-line">
+        <div class="info"><div class="t">${esc(i.artist)} — ${esc(i.title)}</div><div class="a">${esc(i.album)} · ${fmtDur(i.durationMs)}</div></div>
+        <button class="btn danger small" data-action="remove" data-key="${esc(i.key)}">✕</button>
+      </div>`);
+  });
+  $('cart-total').classList.remove('hidden');
+  $('cart-total-val').textContent = state.cart.length+' трек. · '+fmtDur(totalMs);
+  $('checkout-form').classList.remove('hidden');
+}
+async function doCheckout(e){
+  e.preventDefault();
+  if (!state.cart.length) return toast('Корзина пуста');
+  const name=$('co-name').value.trim(), phone=$('co-phone').value.trim(), address=$('co-address').value.trim(), comment=$('co-comment').value.trim();
+  if (name.length<2) return toast('Укажите имя');
+  if (phone.replace(/\D/g,'').length<5) return toast('Укажите телефон');
+  if (address.length<5) return toast('Укажите адрес');
+  try {
+    const [order] = await rest('POST','sd_orders',{ body:{ user_id:state.user.uid, customer_name:name, phone, address, comment } });
+    await rest('POST','sd_order_items',{ body: state.cart.map((i,p)=>({ order_id:order.id, position:p+1, artist:i.artist, title:i.title, album:i.album, duration:Math.round(i.durationMs/1000), preview_url:i.previewUrl, source:'itunes', external_id:i.key })) });
+    state.cart=[]; localStorage.removeItem('sd_cart');
+    $('co-name').value=$('co-phone').value=$('co-address').value=$('co-comment').value='';
+    renderCart();
+    toast('Заказ '+order.number+' принят!');
+    loadUserOrders();
+  } catch(err){ toast(err.message); }
+}
+
+/* ---------- Заказы пользователя ---------- */
+async function loadUserOrders(){
+  try {
+    const orders = await rest('GET', `sd_orders?user_id=eq.${state.user.uid}&order=created_at.desc&limit=50`);
+    const box = $('my-orders');
+    box.innerHTML = orders.length ? '' : '<div class="empty">Заказов пока нет</div>';
+    for (const o of orders){
+      box.insertAdjacentHTML('beforeend', `
+        <div class="order">
+          <div class="top"><span class="num">${esc(o.number)}</span><span class="badge ${STATUS_CLASS[o.status]||'b-new'}">${STATUS[o.status]||o.status}</span></div>
+          <div class="muted" style="margin-top:4px">${fmtDate(o.created_at)} · ${esc(o.customer_name)}</div>
+        </div>`);
+    }
+  } catch(e){ toast(e.message); }
+}
+
+/* ---------- Админка ---------- */
+async function loadAdmin(){
+  try {
+    const [orders, items, profiles] = await Promise.all([
+      rest('GET','sd_orders?order=created_at.desc&limit=100'),
+      rest('GET','sd_order_items?order=position.asc&limit=2000'),
+      rest('GET','sd_profiles?select=id,login,display_name,role,created_at&order=created_at.asc'),
+    ]);
+    state.orders = new Map();
+    const byOrder = {};
+    for (const it of items){ (byOrder[it.order_id] = byOrder[it.order_id] || []).push(it); }
+    for (const o of orders){ state.orders.set(o.id, { ...o, items: byOrder[o.id]||[] }); }
+    state.profiles = profiles || [];
+
+    const tb = $('orders-body');
+    tb.innerHTML = orders.length ? '' : '<tr><td colspan="6" class="empty">Заказов нет</td></tr>';
+    for (const o of orders){
+      tb.insertAdjacentHTML('beforeend', `
+        <tr data-action="open-order" data-id="${o.id}" style="cursor:pointer">
+          <td><b>${esc(o.number)}</b></td>
+          <td>${fmtDate(o.created_at)}</td>
+          <td>${esc(o.customer_name)}</td>
+          <td>${(byOrder[o.id]||[]).length}</td>
+          <td><span class="badge ${STATUS_CLASS[o.status]||'b-new'}">${STATUS[o.status]||o.status}</span></td>
+          <td>${esc(o.track_number||'—')}</td>
+        </tr>`);
+    }
+
+    const ub = $('users-body');
+    ub.innerHTML = state.profiles.length ? '' : '<tr><td colspan="4" class="empty">—</td></tr>';
+    for (const p of state.profiles){
+      ub.insertAdjacentHTML('beforeend', `
+        <tr><td>${esc(p.login)}</td><td>${esc(p.display_name||'')}</td><td>${esc(p.role)}</td><td>${fmtDate(p.created_at)}</td></tr>`);
+    }
+  } catch(e){ toast(e.message); }
+}
+function openOrder(id){
+  const o = state.orders.get(+id);
+  if (!o) return;
+  const box = $('order-detail');
+  box.classList.remove('hidden');
+  const actions = (o.status==='new'||o.status==='recorded')
+    ? `<button class="btn small" data-action="set-status" data-id="${o.id}" data-status="${o.status==='new'?'recorded':'shipped'}">${o.status==='new'?'✅ Записал на диск':'📦 Отправил'}</button>
+       <button class="btn small danger" data-action="set-status" data-id="${o.id}" data-status="canceled">❌ Отменить</button>` : '';
+  box.innerHTML = `
+    <h3>${esc(o.number)} <span class="badge ${STATUS_CLASS[o.status]||'b-new'}">${STATUS[o.status]||o.status}</span></h3>
+    <div class="muted">👤 ${esc(o.customer_name)} · 📞 ${esc(o.phone)} · 🏠 ${esc(o.address)}${o.comment?' · 💬 '+esc(o.comment):''}</div>
+    <div class="row" style="margin:12px 0">${actions}
+      <input class="grow" style="max-width:260px" placeholder="Трек-номер" value="${esc(o.track_number||'')}" id="track-input">
+      <button class="btn small ghost" data-action="set-track" data-id="${o.id}">Сохранить трек-№</button>
+    </div>
+    <div class="list">` +
+    (o.items.map(it => `
+      <div class="track">
+        <button class="play ${(player.key===it.id)?'playing':''}" data-action="play" data-key="${esc(it.id)}" data-title="${esc(it.title)}" data-artist="${esc(it.artist)}" data-preview="${esc(it.preview_url||'')}">▶</button>
+        <div class="info"><div class="t">${esc(it.artist)} — ${esc(it.title)}</div><div class="a">${esc(it.album)}</div></div>
+        <div class="dur">${fmtDur((it.duration||0)*1000)}</div>
+      </div>`).join('')) + '</div>';
+}
+
+/* ---------- Плеер ---------- */
+function stopPlayback(){ if (player.audio){ player.audio.pause(); player.audio=null; } player.key=null; $('player-bar').classList.remove('show'); document.querySelectorAll('.play.playing').forEach(b=>b.classList.remove('playing')); }
+function playPreview(key,title,artist,url){
+  if (player.key===key){ stopPlayback(); return; }
+  if (!url) return toast('У этого трека нет превью');
+  stopPlayback();
+  player.key = key;
+  player.audio = new Audio(url);
+  const bar=$('player-bar'), pb=$('pb-btn'), fill=$('pb-fill'), time=$('pb-time'), seek=$('pb-seek');
+  $('pb-title').textContent=title; $('pb-artist').textContent=artist;
+  bar.classList.add('show'); pb.textContent='⏸';
+  document.querySelectorAll(`.play[data-key="${CSS.escape(String(key))}"]`).forEach(b=>b.classList.add('playing'));
+  player.audio.addEventListener('timeupdate', ()=>{ const pct=(player.audio.currentTime/(player.audio.duration||1))*100; fill.style.width=pct+'%'; time.textContent=fmtDur(player.audio.currentTime*1000)+' / '+fmtDur((player.audio.duration||0)*1000); });
+  player.audio.addEventListener('ended', stopPlayback);
+  player.audio.addEventListener('error', ()=>{ toast('Не удалось воспроизвести'); stopPlayback(); });
+  player.audio.play();
+  pb.onclick = ()=>{ if (player.audio.paused){ player.audio.play(); pb.textContent='⏸'; } else { player.audio.pause(); pb.textContent='▶'; } };
+  seek.onclick = e => { const r=seek.getBoundingClientRect(); if(player.audio.duration){ player.audio.currentTime=((e.clientX-r.left)/r.width)*player.audio.duration; } };
+}
+
+/* ---------- События ---------- */
+document.addEventListener('click', async ev => {
+  const el = ev.target.closest('[data-action]');
+  if (!el) return;
+  const a = el.dataset.action;
+  if (a==='login') return doLogin();
+  if (a==='register') return doRegister();
+  if (a==='logout') return logout();
+  if (a==='search') return doSearch();
+  if (a==='tab'){ state.mode=el.dataset.mode; $('tab-song').classList.toggle('on', state.mode==='song'); $('tab-album').classList.toggle('on', state.mode==='album'); return doSearch(); }
+  if (a==='album') return loadAlbum(el.dataset.id);
+  if (a==='add') return addToCart({ id:el.dataset.id, title:el.dataset.title, artist:el.dataset.artist, album:el.dataset.album, dur:el.dataset.dur, preview:el.dataset.preview });
+  if (a==='add-album'){
+    const data = JSON.parse(document.getElementById('album-list').dataset.album || '[]');
+    let n=0; for (const t of data){ if (!state.cart.some(i=>i.key===String(t.id))){ state.cart.push(cartItem(t)); n++; } }
+    localStorage.setItem('sd_cart', JSON.stringify(state.cart)); renderCart(); toast('Добавлено треков: '+n); return;
+  }
+  if (a==='remove'){ state.cart = state.cart.filter(i=>i.key!==el.dataset.key); localStorage.setItem('sd_cart', JSON.stringify(state.cart)); renderCart(); return; }
+  if (a==='clear-cart'){ state.cart=[]; localStorage.removeItem('sd_cart'); renderCart(); return; }
+  if (a==='play') return playPreview(el.dataset.key, el.dataset.title, el.dataset.artist, el.dataset.preview);
+  if (a==='refresh-orders') return loadAdmin();
+  if (a==='open-order') return openOrder(el.dataset.id);
+  if (a==='set-status'){
+    try { await rest('PATCH', `sd_orders?id=eq.${el.dataset.id}`, { body:{ status: el.dataset.status } }); toast('Статус обновлён'); loadAdmin(); openOrder(el.dataset.id); }
+    catch(e){ toast(e.message); }
+    return;
+  }
+  if (a==='set-track'){
+    const id = el.dataset.id;
+    const val = document.getElementById('track-input').value.trim();
+    try { await rest('PATCH', `sd_orders?id=eq.${id}`, { body:{ track_number: val } }); toast('Трек-номер сохранён'); loadAdmin(); openOrder(id); }
+    catch(e){ toast(e.message); }
+    return;
+  }
+});
+$('checkout-form').addEventListener('submit', doCheckout);
+$('q').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
+$('nav-user').addEventListener('click', ()=>setView('user'));
+$('nav-admin').addEventListener('click', ()=>setView('admin'));
+$('nav-logout').addEventListener('click', ()=>logout());
+
+/* ---------- Старт ---------- */
+(async function init(){
+  const saved = loadSession();
+  if (saved && saved.token){ state.token=saved.token; state.user=saved.user; }
+  try { state.cart = JSON.parse(localStorage.getItem('sd_cart')||'[]'); } catch(e){ state.cart=[]; }
+  if (state.token){
+    const p = await refreshProfile();
+    if (p) { state.user={...state.user, role:p.role, login:p.login, display_name:p.display_name}; saveSession(); }
+    else { state.token=null; state.user=null; }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
