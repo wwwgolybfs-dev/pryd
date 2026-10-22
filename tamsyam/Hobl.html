@@ -2,242 +2,492 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Мировая смертность от ХОБЛ (1990–2026)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ХОБЛ: мировая смертность и тренды (1990–2026)</title>
+<meta name="description" content="ХОБЛ — хроническая обструктивная болезнь лёгких: динамика смертности 1990–2026, региональная структура, факторы риска и ссылки на исследования.">
+<meta property="og:title" content="ХОБЛ: мировая смертность и тренды">
+<meta property="og:description" content="Смертность, заболеваемость и факторы риска ХОБЛ в графиках и цифрах.">
+<meta property="og:type" content="website">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #f5f7fa;
-    color: #1a1a1a;
-    margin: 0;
-    padding: 24px;
+  :root{
+    --bg:#0b1220; --bg2:#0f1a2e; --card:#131f36; --card2:#182642;
+    --ink:#e8eef8; --muted:#93a4c3; --line:rgba(148,163,184,.16);
+    --teal:#2dd4bf; --cyan:#38bdf8; --amber:#fbbf24; --rose:#fb7185; --violet:#a78bfa;
+    --radius:18px;
   }
-  .container { max-width: 1200px; margin: 0 auto; }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  p.sub { color: #666; margin-top: 0; margin-bottom: 24px; }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(45,212,191,.10), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 70px}
 
-  .card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 20px;
-    margin-bottom: 24px;
-  }
+  /* ── hero ── */
+  .hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;
+    padding:44px 36px 36px;margin-bottom:26px;
+    background:linear-gradient(135deg,rgba(19,31,54,.95),rgba(11,18,32,.9))}
+  .hero::after{content:"";position:absolute;inset:-40% -10% auto auto;width:520px;height:520px;
+    background:radial-gradient(circle,rgba(56,189,248,.22),transparent 62%);pointer-events:none}
+  .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--teal);font-weight:700}
+  h1{font-size:clamp(28px,4.6vw,48px);line-height:1.1;margin:14px 0 10px;letter-spacing:-.02em}
+  .lead{max-width:62ch;color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .chip{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);
+    color:var(--muted);background:rgba(255,255,255,.03)}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  thead th {
-    background: #2c3e50;
-    color: #fff;
-    padding: 10px 12px;
-    text-align: left;
-    font-weight: 600;
-  }
-  tbody td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #eef1f5;
-    vertical-align: top;
-  }
-  tbody tr:hover { background: #f8fafc; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .forecast { color: #d97706; font-style: italic; }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .badge.fact { background: #d1fae5; color: #065f46; }
-  .badge.covid { background: #fee2e2; color: #991b1b; }
-  .badge.prelim { background: #fef3c7; color: #92400e; }
-  .badge.forecast { background: #e0e7ff; color: #3730a3; }
+  /* ── KPI ── */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 30px}
+  .kpi{border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;
+    background:linear-gradient(160deg,var(--card),rgba(19,31,54,.55))}
+  .kpi b{display:block;font-size:clamp(24px,3.4vw,34px);line-height:1.1;letter-spacing:-.02em}
+  .kpi span{display:block;color:var(--muted);font-size:13px;margin-top:6px}
+  .kpi .up{color:var(--rose)} .kpi .down{color:var(--teal)}
+  .kpi .src{display:block;margin-top:10px;font-size:11px;color:rgba(147,164,195,.7)}
 
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-  @media (max-width: 900px) {
-    .charts-grid { grid-template-columns: 1fr; }
-  }
-  .chart-wrap { position: relative; height: 340px; }
-  h2 { font-size: 16px; margin: 0 0 12px; color: #334155; }
-  .chart-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .legend-note { font-size: 12px; color: #64748b; margin-top: 8px; }
+  /* ── sections ── */
+  section{margin-top:34px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+  h2{font-size:clamp(19px,2.4vw,24px);margin:0;letter-spacing:-.01em}
+  .sec-head p{margin:0;color:var(--muted);font-size:13.5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}
+  .card{background:linear-gradient(160deg,var(--card),rgba(11,18,32,.65));
+    border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h3{margin:0 0 4px;font-size:15.5px}
+  .card .hint{margin:0 0 14px;color:var(--muted);font-size:12.5px}
+  .chart{position:relative;height:320px}
+  .chart.sm{height:290px}
+  @media(max-width:920px){.grid2,.grid3{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.kpis{grid-template-columns:1fr}.hero{padding:32px 22px}}
+
+  /* ── table ── */
+  details.tablebox{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:18px 20px}
+  details.tablebox summary{cursor:pointer;font-weight:700;color:var(--ink);list-style:none}
+  details.tablebox summary::-webkit-details-marker{display:none}
+  details.tablebox summary::before{content:"▸ ";color:var(--teal)}
+  details.tablebox[open] summary::before{content:"▾ "}
+  .table-scroll{overflow-x:auto;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+  thead th{position:sticky;top:0;background:var(--card2);color:var(--ink);text-align:left;
+    padding:10px 12px;font-weight:700;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+  tbody td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top;color:#c9d6ea}
+  tbody tr:hover{background:rgba(56,189,248,.05)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);font-weight:600}
+  .forecast td.num{color:var(--amber)}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.05em;margin-right:6px;vertical-align:1px}
+  .badge.fact{background:rgba(45,212,191,.14);color:var(--teal)}
+  .badge.covid{background:rgba(251,113,133,.14);color:var(--rose)}
+  .badge.prelim{background:rgba(251,191,36,.14);color:var(--amber)}
+  .badge.forecast{background:rgba(167,139,250,.16);color:var(--violet)}
+
+  /* ── link cards ── */
+  .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .link-card{display:block;border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;
+    background:rgba(24,38,66,.5);transition:border-color .15s,transform .15s}
+  .link-card:hover{border-color:rgba(56,189,248,.45);transform:translateY(-2px);text-decoration:none}
+  .link-card .tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:800}
+  .link-card b{display:block;margin:7px 0 5px;color:var(--ink);font-size:15px}
+  .link-card span{color:var(--muted);font-size:13px;line-height:1.5;display:block}
+  .link-card .host{display:block;margin-top:9px;font-size:11.5px;color:rgba(147,164,195,.75)}
+
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{appearance:none;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.1);
+    color:var(--ink);border-radius:11px;padding:10px 16px;font:600 13.5px/1 inherit;cursor:pointer}
+  .btn:hover{background:rgba(56,189,248,.18)}
+  .btn.ghost{border-color:var(--line);background:transparent;color:var(--muted)}
+
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  footer b{color:var(--ink)}
+  .disclaimer{margin-top:10px;color:rgba(147,164,195,.8)}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Мировая смертность от ХОБЛ, 1990–2026</h1>
-  <p class="sub">Абсолютное число смертей (по данным GBD, ВОЗ, GOLD). Значения округлены.</p>
+<div class="wrap">
 
-  <div class="card">
-    <h2>Таблица данных</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Год</th>
-          <th style="text-align:right">Смертность, чел.</th>
-          <th>Статус данных / Контекст</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="eyebrow">● Respiratory health · GBD / WHO / GOLD</div>
+    <h1>ХОБЛ: мировая смертность и тренды</h1>
+    <p class="lead">Хроническая обструктивная болезнь лёгких — одна из ведущих причин смерти в мире.
+      Здесь собраны динамика смертности за 1990–2026, региональная структура, факторы риска
+      и ссылки на профильные исследования и официальные источники.</p>
+    <div class="chips">
+      <span class="chip">≈ 3,3 млн смертей в год</span>
+      <span class="chip">3-я–4-я причина смерти в мире</span>
+      <span class="chip">Основной фактор — курение</span>
+      <span class="chip">Данные: GBD, ВОЗ, GOLD</span>
+    </div>
+  </header>
+
+  <!-- KPI -->
+  <div class="kpis">
+    <div class="kpi"><b>≈3,3 млн</b><span>смертей в год (2021–2023)</span><span class="src">GBD / WHO</span></div>
+    <div class="kpi"><b class="up">+30%</b><span>рост абсолютной смертности с 1990 года</span><span class="src">расчёт по данным GBD</span></div>
+    <div class="kpi"><b class="down">−40%</b><span>снижение стандартизованной смертности</span><span class="src">ASR, GBD</span></div>
+    <div class="kpi"><b>≈213 млн</b><span>человек живут с ХОБЛ</span><span class="src">оценка ВОЗ</span></div>
   </div>
 
-  <div class="charts-grid">
-    <div class="chart-card">
-      <h2>Линейный тренд (факт + прогноз)</h2>
-      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
-      <p class="legend-note">Пунктир — прогнозные значения (2024–2026).</p>
+  <!-- DYNAMICS -->
+  <section>
+    <div class="sec-head">
+      <h2>Динамика смертности</h2>
+      <p>Абсолютное число смертей; 2024–2026 — модельный прогноз.</p>
     </div>
-    <div class="chart-card">
-      <h2>Абсолютный прирост по годам</h2>
-      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
-      <p class="legend-note">Зелёный — рост, красный — снижение относительно предыдущей точки.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Смертность 1990–2026</h3>
+        <p class="hint">Сплошная линия — факт и предварительные оценки, пунктир — прогноз.</p>
+        <div class="chart"><canvas id="lineChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Прирост по годам</h3>
+        <p class="hint">Изменение абсолютного числа смертей к предыдущей точке.</p>
+        <div class="chart"><canvas id="barChart"></canvas></div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- STRUCTURE -->
+  <section>
+    <div class="sec-head">
+      <h2>Где и почему</h2>
+      <p>Региональная структура смертности и вклад факторов риска.</p>
+    </div>
+    <div class="grid3">
+      <div class="card">
+        <h3>Смертность по регионам ВОЗ, 2021</h3>
+        <p class="hint">Доли от общего числа смертей от ХОБЛ, млн человек (оценка).</p>
+        <div class="chart"><canvas id="regionChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Факторы риска</h3>
+        <p class="hint">Вклад в DALY, связанные с ХОБЛ (ориентировочно).</p>
+        <div class="chart sm"><canvas id="riskChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASMR -->
+  <section>
+    <div class="sec-head">
+      <h2>Стандартизованная смертность</h2>
+      <p>Смертей на 100 тыс. населения (возрастная стандартизация) — тренд вниз.</p>
+    </div>
+    <div class="card">
+      <h3>ASR на 100 тыс., 1990–2021</h3>
+      <p class="hint">Снижение отражает эффект отказа от курения и улучшения терапии в развитых странах.</p>
+      <div class="chart"><canvas id="asmChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- TABLE -->
+  <section>
+    <details class="tablebox">
+      <summary>Таблица данных и контекст по годам</summary>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Год</th><th style="text-align:right">Смертность, чел.</th><th>Статус / контекст</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </details>
+    <div class="btns">
+      <button class="btn" id="csvBtn">Скачать CSV</button>
+      <button class="btn ghost" id="topBtn">Наверх</button>
+    </div>
+  </section>
+
+  <!-- SOURCES -->
+  <section>
+    <div class="sec-head">
+      <h2>Статьи и исследования</h2>
+      <p>Первоисточники, на которых основаны оценки.</p>
+    </div>
+    <div class="links">
+      <a class="link-card" href="https://www.who.int/news-room/fact-sheets/detail/chronic-obstructive-pulmonary-disease-(copd)" target="_blank" rel="noopener">
+        <span class="tag">ВОЗ</span><b>COPD fact sheet</b>
+        <span>Ключевые цифры, определение, факторы риска и профилактика от Всемирной организации здравоохранения.</span>
+        <span class="host">who.int</span>
+      </a>
+      <a class="link-card" href="https://www.healthdata.org/research-analysis/gbd" target="_blank" rel="noopener">
+        <span class="tag">GBD / IHME</span><b>Global Burden of Disease</b>
+        <span>Методология и результаты GBD: смертность, DALY и факторы риска по странам и регионам.</span>
+        <span class="host">healthdata.org</span>
+      </a>
+      <a class="link-card" href="https://goldcopd.org/" target="_blank" rel="noopener">
+        <span class="tag">GOLD</span><b>Global Initiative for COPD</b>
+        <span>Ежегодные отчёты GOLD: диагностика, классификация, стратегия лечения ХОБЛ.</span>
+        <span class="host">goldcopd.org</span>
+      </a>
+      <a class="link-card" href="https://www.cdc.gov/copd/" target="_blank" rel="noopener">
+        <span class="tag">CDC</span><b>COPD — данные и статистика</b>
+        <span>Американские эпидемиологические данные, факторы риска и материалы для пациентов.</span>
+        <span class="host">cdc.gov</span>
+      </a>
+      <a class="link-card" href="https://www.ersnet.org/" target="_blank" rel="noopener">
+        <span class="tag">ERS</span><b>European Respiratory Society</b>
+        <span>Научные публикации, конгрессы и рекомендации по респираторной медицине.</span>
+        <span class="host">ersnet.org</span>
+      </a>
+      <a class="link-card" href="https://spulmo.ru/" target="_blank" rel="noopener">
+        <span class="tag">Россия</span><b>Российское респираторное общество</b>
+        <span>Клинические рекомендации и материалы по ХОБЛ на русском языке.</span>
+        <span class="host">spulmo.ru</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section>
+    <div class="sec-head">
+      <h2>Актуальные новости и обновления</h2>
+      <p>Официальные разделы, где публикуются свежие материалы (ссылки ведут на источник).</p>
+    </div>
+    <div class="links">
+      <a class="link-card" href="https://www.who.int/news-room" target="_blank" rel="noopener">
+        <span class="tag">новости</span><b>ВОЗ · Newsroom</b>
+        <span>Пресс-релизы и новости ВОЗ, включая респираторные заболевания и табачный контроль.</span>
+        <span class="host">who.int</span>
+      </a>
+      <a class="link-card" href="https://goldcopd.org/news/" target="_blank" rel="noopener">
+        <span class="tag">обновления</span><b>GOLD · новости</b>
+        <span>Новые отчёты, консенсусы и изменения в рекомендациях по ХОБЛ.</span>
+        <span class="host">goldcopd.org</span>
+      </a>
+      <a class="link-card" href="https://www.healthdata.org/news-events/news" target="_blank" rel="noopener">
+        <span class="tag">данные</span><b>IHME · новости и данные</b>
+        <span>Публикации GBD, обновления оценок и пресс-релизы по глобальному здоровью.</span>
+        <span class="host">healthdata.org</span>
+      </a>
+      <a class="link-card" href="https://minzdrav.gov.ru/" target="_blank" rel="noopener">
+        <span class="tag">Россия</span><b>Минздрав РФ</b>
+        <span>Официальные новости, статистика и нормативные документы по здравоохранению.</span>
+        <span class="host">minzdrav.gov.ru</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <b>О странице.</b> Данные агрегированы и округлены, прогнозы — модельные оценки; страница носит
+    информационно-образовательный характер и не является медицинской рекомендацией.
+    Сверяйтесь с первоисточниками (GBD, ВОЗ, GOLD) и консультируйтесь с врачом.
+    <div class="disclaimer">Последнее обновление: 2026 · Статичная оффлайн-страница, графики считаются в браузере.</div>
+  </footer>
 </div>
 
 <script>
-  // ---------- Данные ----------
+  /* ── данные ── */
   const data = [
-    { year: 1990, value: 2_500_000, status: "fact",     note: "Старт глобального системного учета GBD." },
-    { year: 2000, value: 2_800_000, status: "fact",     note: "Рост из-за накопительного эффекта курения в XX веке." },
-    { year: 2010, value: 3_080_000, status: "fact",     note: "ХОБЛ закрепляется в тройке лидеров по причинам смертности." },
-    { year: 2019, value: 3_300_000, status: "fact",     note: "Пик допандемийной абсолютной смертности." },
-    { year: 2020, value: 3_230_000, status: "covid",    note: "Корректировка из-за перераспределения причин смерти в период COVID-19." },
-    { year: 2021, value: 3_280_000, status: "fact",     note: "По данным отчетностей GBD и ВОЗ." },
-    { year: 2022, value: 3_320_000, status: "fact",     note: "Окончательные сборы национальных статистик стран." },
-    { year: 2023, value: 3_360_000, status: "prelim",   note: "Предварительная агрегированная статистика ВОЗ." },
-    { year: 2024, value: 3_400_000, status: "forecast", note: "Моделирование на основе динамики заболеваемости в странах Азии и Африки." },
-    { year: 2025, value: 3_440_000, status: "forecast", note: "Тренд на дальнейший рост из-за старения населения планеты." },
-    { year: 2026, value: 3_480_000, status: "forecast", note: "Текущая математическая оценка международного консорциума GOLD." },
+    { year: 1990, value: 2500000, status: "fact",     note: "Старт глобального системного учёта GBD." },
+    { year: 2000, value: 2800000, status: "fact",     note: "Накопительный эффект курения в XX веке." },
+    { year: 2010, value: 3080000, status: "fact",     note: "ХОБЛ закрепляется в тройке причин смертности." },
+    { year: 2019, value: 3300000, status: "fact",     note: "Пик допандемийной абсолютной смертности." },
+    { year: 2020, value: 3230000, status: "covid",    note: "Перераспределение причин смерти в период COVID-19." },
+    { year: 2021, value: 3280000, status: "fact",     note: "Отчётности GBD и ВОЗ." },
+    { year: 2022, value: 3320000, status: "fact",     note: "Сборы национальных статистик." },
+    { year: 2023, value: 3360000, status: "prelim",   note: "Предварительная агрегированная статистика ВОЗ." },
+    { year: 2024, value: 3400000, status: "forecast", note: "Модель: рост заболеваемости в странах Азии и Африки." },
+    { year: 2025, value: 3440000, status: "forecast", note: "Старение населения планеты." },
+    { year: 2026, value: 3480000, status: "forecast", note: "Математическая оценка (консенсусные модели)." },
+  ];
+
+  const regions = [
+    { label: "Западная Пацифика", value: 1.00 },
+    { label: "Юго-Восточная Азия", value: 0.90 },
+    { label: "Европа", value: 0.45 },
+    { label: "Америка", value: 0.28 },
+    { label: "Африка", value: 0.25 },
+    { label: "Восточное Средиземноморье", value: 0.18 },
+  ];
+
+  const risks = [
+    { label: "Курение", value: 45 },
+    { label: "Загрязнение воздуха", value: 20 },
+    { label: "Проф. вредности", value: 15 },
+    { label: "Пассивное курение", value: 8 },
+    { label: "Другие факторы", value: 12 },
+  ];
+
+  const asr = [
+    { year: 1990, value: 118 }, { year: 2000, value: 100 }, { year: 2010, value: 82 },
+    { year: 2015, value: 74 },  { year: 2019, value: 70 },  { year: 2021, value: 63 },
   ];
 
   const badgeLabel = {
-    fact:     { text: "факт",     cls: "fact" },
-    covid:    { text: "COVID-19", cls: "covid" },
-    prelim:   { text: "предв.",   cls: "prelim" },
-    forecast: { text: "прогноз",  cls: "forecast" },
+    fact:     { text: "факт",            cls: "fact" },
+    covid:    { text: "COVID-19",        cls: "covid" },
+    prelim:   { text: "предв.",          cls: "prelim" },
+    forecast: { text: "прогноз",         cls: "forecast" },
   };
 
-  const fmt = n => n.toLocaleString("ru-RU").replace(/,/g, " ");
+  const fmt = n => Number(n).toLocaleString("ru-RU").replace(/\u00A0/g, " ");
+  const gridColor = "rgba(148,163,184,.13)";
+  const tickColor = "#93a4c3";
 
-  // ---------- Таблица ----------
+  Chart.defaults.color = tickColor;
+  Chart.defaults.font.family = '-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+  Chart.defaults.borderColor = gridColor;
+
+  /* ── таблица ── */
   const tbody = document.getElementById("tbody");
   data.forEach(d => {
     const b = badgeLabel[d.status];
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${d.year}</td>
-      <td class="num ${d.status === 'forecast' ? 'forecast' : ''}">${fmt(d.value)}</td>
-      <td><span class="badge ${b.cls}">${b.text}</span> ${d.note}</td>
-    `;
+    if (d.status === "forecast") tr.className = "forecast";
+    tr.innerHTML = `<td>${d.year}</td><td class="num">${fmt(d.value)}</td>
+      <td><span class="badge ${b.cls}">${b.text}</span>${d.note}</td>`;
     tbody.appendChild(tr);
   });
 
-  // ---------- Линейный график ----------
   const labels = data.map(d => d.year);
   const values = data.map(d => d.value);
-  const forecastStart = data.findIndex(d => d.status === "forecast");
+  const firstForecast = data.findIndex(d => d.status === "forecast");
+  const solid  = values.map((v, i) => i <= firstForecast ? v : null);
+  const dashed = values.map((v, i) => i >= firstForecast ? v : null);
 
-  // Точки разбиваем: сплошная линия до последнего факта включительно,
-  // затем пунктирная от последнего факта до конца прогноза (общая точка).
-  const solid = values.map((v, i) => i <= forecastStart ? v : null);
-  const dashed = values.map((v, i) => i >= forecastStart ? v : null);
-
+  /* ── 1. линия ── */
   new Chart(document.getElementById("lineChart"), {
     type: "line",
     data: {
       labels,
       datasets: [
-        {
-          label: "Факт",
-          data: solid,
-          borderColor: "#0ea5e9",
-          backgroundColor: "rgba(14,165,233,0.12)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: "#0ea5e9",
-        },
-        {
-          label: "Прогноз",
-          data: dashed,
-          borderColor: "#f59e0b",
-          backgroundColor: "transparent",
-          borderDash: [6, 6],
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: "#f59e0b",
-        },
+        { label: "Факт", data: solid, borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,.14)",
+          fill: true, tension: .35, pointRadius: 4, pointBackgroundColor: "#38bdf8", borderWidth: 2.5 },
+        { label: "Прогноз", data: dashed, borderColor: "#fbbf24", borderDash: [6, 6],
+          fill: false, tension: .35, pointRadius: 4, pointBackgroundColor: "#fbbf24", borderWidth: 2.5 },
       ],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { position: "bottom" },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${fmt(ctx.parsed.y)} чел.`,
-          },
-        },
+        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.parsed.y)} чел.` } },
       },
       scales: {
-        y: {
-          ticks: { callback: v => (v / 1e6).toFixed(1) + " млн" },
-          title: { display: true, text: "Смертность (млн чел.)" },
-        },
-        x: { title: { display: true, text: "Год" } },
+        y: { ticks: { callback: v => (v / 1e6).toFixed(1) + " млн" }, title: { display: true, text: "млн смертей" } },
+        x: { grid: { display: false } },
       },
     },
   });
 
-  // ---------- Столбчатый график прироста ----------
+  /* ── 2. прирост ── */
   const growth = data.map((d, i) => i === 0 ? null : d.value - data[i - 1].value);
-  const growthColors = growth.map(g => g === null ? "transparent" : (g >= 0 ? "#10b981" : "#ef4444"));
-
   new Chart(document.getElementById("barChart"), {
     type: "bar",
+    data: { labels, datasets: [{
+      label: "Δ к предыдущей точке",
+      data: growth,
+      backgroundColor: growth.map(g => g === null ? "transparent" : (g >= 0 ? "rgba(251,113,133,.75)" : "rgba(45,212,191,.75)")),
+      borderRadius: 6, maxBarThickness: 34,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.parsed.y === null ? " — " : ` ${c.parsed.y > 0 ? "+" : ""}${fmt(c.parsed.y)} чел.` } },
+      },
+      scales: {
+        y: { ticks: { callback: v => (v / 1e3).toFixed(0) + " тыс." }, title: { display: true, text: "Δ, тыс. чел." } },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+
+  /* ── 3. регионы ── */
+  new Chart(document.getElementById("regionChart"), {
+    type: "doughnut",
     data: {
-      labels,
+      labels: regions.map(r => r.label),
       datasets: [{
-        label: "Прирост к предыдущей точке, чел.",
-        data: growth,
-        backgroundColor: growthColors,
-        borderRadius: 6,
+        data: regions.map(r => r.value),
+        backgroundColor: ["#38bdf8","#2dd4bf","#a78bfa","#fbbf24","#fb7185","#94a3b8"],
+        borderColor: "#0b1220", borderWidth: 3, hoverOffset: 8,
       }],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, cutout: "58%",
       plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => ctx.parsed.y === null
-              ? " — "
-              : ` ${ctx.parsed.y > 0 ? "+" : ""}${fmt(ctx.parsed.y)} чел.`,
-          },
-        },
-      },
-      scales: {
-        y: {
-          ticks: { callback: v => (v / 1000).toFixed(0) + " тыс." },
-          title: { display: true, text: "Δ, тыс. чел." },
-        },
-        x: { title: { display: true, text: "Год" } },
+        legend: { position: "right", labels: { usePointStyle: true, boxWidth: 8, font: { size: 11.5 } } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ≈${c.parsed.toFixed(2)} млн` } },
       },
     },
   });
+
+  /* ── 4. факторы риска ── */
+  new Chart(document.getElementById("riskChart"), {
+    type: "bar",
+    data: {
+      labels: risks.map(r => r.label),
+      datasets: [{
+        data: risks.map(r => r.value),
+        backgroundColor: ["rgba(251,113,133,.8)","rgba(251,191,36,.8)","rgba(56,189,248,.8)","rgba(45,212,191,.8)","rgba(167,139,250,.8)"],
+        borderRadius: 6, maxBarThickness: 26,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ≈${c.parsed.x}% вклада` } },
+      },
+      scales: {
+        x: { ticks: { callback: v => v + "%" }, max: 50, title: { display: true, text: "доля в DALY" } },
+        y: { grid: { display: false } },
+      },
+    },
+  });
+
+  /* ── 5. ASR ── */
+  new Chart(document.getElementById("asmChart"), {
+    type: "line",
+    data: {
+      labels: asr.map(d => d.year),
+      datasets: [{
+        label: "ASR на 100 тыс.",
+        data: asr.map(d => d.value),
+        borderColor: "#2dd4bf", backgroundColor: "rgba(45,212,191,.16)",
+        fill: true, tension: .35, borderWidth: 2.5,
+        pointRadius: 4, pointBackgroundColor: "#2dd4bf",
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.y} на 100 тыс.` } },
+      },
+      scales: {
+        y: { title: { display: true, text: "на 100 тыс. населения" } },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+
+  /* ── CSV ── */
+  document.getElementById("csvBtn").addEventListener("click", () => {
+    const rows = [["Год","Смертность, чел.","Статус","Комментарий"]];
+    data.forEach(d => rows.push([d.year, d.value, d.status, d.note.replace(/;/g,",")]));
+    const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = "copd_mortality.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("topBtn").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 </script>
 </body>
 </html>
