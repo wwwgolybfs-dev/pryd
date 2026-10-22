@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мировая смертность от ХОБЛ (1990–2026)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f5f7fa;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 24px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  p.sub { color: #666; margin-top: 0; margin-bottom: 24px; }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead th {
+    background: #2c3e50;
+    color: #fff;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef1f5;
+    vertical-align: top;
+  }
+  tbody tr:hover { background: #f8fafc; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .forecast { color: #d97706; font-style: italic; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge.fact { background: #d1fae5; color: #065f46; }
+  .badge.covid { background: #fee2e2; color: #991b1b; }
+  .badge.prelim { background: #fef3c7; color: #92400e; }
+  .badge.forecast { background: #e0e7ff; color: #3730a3; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+  .chart-wrap { position: relative; height: 340px; }
+  h2 { font-size: 16px; margin: 0 0 12px; color: #334155; }
+  .chart-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .legend-note { font-size: 12px; color: #64748b; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Мировая смертность от ХОБЛ, 1990–2026</h1>
+  <p class="sub">Абсолютное число смертей (по данным GBD, ВОЗ, GOLD). Значения округлены.</p>
+
+  <div class="card">
+    <h2>Таблица данных</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Год</th>
+          <th style="text-align:right">Смертность, чел.</th>
+          <th>Статус данных / Контекст</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h2>Линейный тренд (факт + прогноз)</h2>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+      <p class="legend-note">Пунктир — прогнозные значения (2024–2026).</p>
+    </div>
+    <div class="chart-card">
+      <h2>Абсолютный прирост по годам</h2>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+      <p class="legend-note">Зелёный — рост, красный — снижение относительно предыдущей точки.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- Данные ----------
+  const data = [
+    { year: 1990, value: 2_500_000, status: "fact",     note: "Старт глобального системного учета GBD." },
+    { year: 2000, value: 2_800_000, status: "fact",     note: "Рост из-за накопительного эффекта курения в XX веке." },
+    { year: 2010, value: 3_080_000, status: "fact",     note: "ХОБЛ закрепляется в тройке лидеров по причинам смертности." },
+    { year: 2019, value: 3_300_000, status: "fact",     note: "Пик допандемийной абсолютной смертности." },
+    { year: 2020, value: 3_230_000, status: "covid",    note: "Корректировка из-за перераспределения причин смерти в период COVID-19." },
+    { year: 2021, value: 3_280_000, status: "fact",     note: "По данным отчетностей GBD и ВОЗ." },
+    { year: 2022, value: 3_320_000, status: "fact",     note: "Окончательные сборы национальных статистик стран." },
+    { year: 2023, value: 3_360_000, status: "prelim",   note: "Предварительная агрегированная статистика ВОЗ." },
+    { year: 2024, value: 3_400_000, status: "forecast", note: "Моделирование на основе динамики заболеваемости в странах Азии и Африки." },
+    { year: 2025, value: 3_440_000, status: "forecast", note: "Тренд на дальнейший рост из-за старения населения планеты." },
+    { year: 2026, value: 3_480_000, status: "forecast", note: "Текущая математическая оценка международного консорциума GOLD." },
+  ];
+
+  const badgeLabel = {
+    fact:     { text: "факт",     cls: "fact" },
+    covid:    { text: "COVID-19", cls: "covid" },
+    prelim:   { text: "предв.",   cls: "prelim" },
+    forecast: { text: "прогноз",  cls: "forecast" },
+  };
+
+  const fmt = n => n.toLocaleString("ru-RU").replace(/,/g, " ");
+
+  // ---------- Таблица ----------
+  const tbody = document.getElementById("tbody");
+  data.forEach(d => {
+    const b = badgeLabel[d.status];
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.year}</td>
+      <td class="num ${d.status === 'forecast' ? 'forecast' : ''}">${fmt(d.value)}</td>
+      <td><span class="badge ${b.cls}">${b.text}</span> ${d.note}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // ---------- Линейный график ----------
+  const labels = data.map(d => d.year);
+  const values = data.map(d => d.value);
+  const forecastStart = data.findIndex(d => d.status === "forecast");
+
+  // Точки разбиваем: сплошная линия до последнего факта включительно,
+  // затем пунктирная от последнего факта до конца прогноза (общая точка).
+  const solid = values.map((v, i) => i <= forecastStart ? v : null);
+  const dashed = values.map((v, i) => i >= forecastStart ? v : null);
+
+  new Chart(document.getElementById("lineChart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Факт",
+          data: solid,
+          borderColor: "#0ea5e9",
+          backgroundColor: "rgba(14,165,233,0.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: "#0ea5e9",
+        },
+        {
+          label: "Прогноз",
+          data: dashed,
+          borderColor: "#f59e0b",
+          backgroundColor: "transparent",
+          borderDash: [6, 6],
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: "#f59e0b",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${fmt(ctx.parsed.y)} чел.`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: { callback: v => (v / 1e6).toFixed(1) + " млн" },
+          title: { display: true, text: "Смертность (млн чел.)" },
+        },
+        x: { title: { display: true, text: "Год" } },
+      },
+    },
+  });
+
+  // ---------- Столбчатый график прироста ----------
+  const growth = data.map((d, i) => i === 0 ? null : d.value - data[i - 1].value);
+  const growthColors = growth.map(g => g === null ? "transparent" : (g >= 0 ? "#10b981" : "#ef4444"));
+
+  new Chart(document.getElementById("barChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Прирост к предыдущей точке, чел.",
+        data: growth,
+        backgroundColor: growthColors,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.y === null
+              ? " — "
+              : ` ${ctx.parsed.y > 0 ? "+" : ""}${fmt(ctx.parsed.y)} чел.`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: { callback: v => (v / 1000).toFixed(0) + " тыс." },
+          title: { display: true, text: "Δ, тыс. чел." },
+        },
+        x: { title: { display: true, text: "Год" } },
+      },
+    },
+  });
+</script>
+</body>
+</html>
